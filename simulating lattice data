@@ -1,0 +1,26 @@
+library("MASS")
+library("dplyr")
+library("ggplot2")
+
+set.seed(20171108)
+sessionInfo()
+Grid <- expand.grid(x.easting = 1:10, x.northing = 1:10)
+n <- nrow(Grid)
+x1 <- rnorm(n) %>% round(2)
+x2 <- rnorm(n) %>% round(2)
+
+# Spatial field
+distance <- as.matrix(dist(Grid))
+omega <- MASS::mvrnorm(n     = 1, 
+                       mu    = rep(0,n), 
+                       Sigma = 0.4 * exp(-0.1 * distance))
+
+eta <- x1 + x2 + omega
+
+d <- Grid %>% 
+  mutate(Y_normal = rnorm(n, eta, sd = 0.1) %>% round(2),
+         Y_pois   = rpois(n, exp(eta)),
+         trials   = 10,
+         Y_binom  = rbinom(n = n, size = trials, prob = 1/(1+exp(-eta))),
+         x1       = x1,
+         x2       = x2)
